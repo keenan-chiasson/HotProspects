@@ -6,26 +6,38 @@
 //
 
 import SwiftUI
+import UserNotifications
 
 struct ContentView: View {
     var body: some View {
-        List {
-            Text("Taylor Swift")
-                .swipeActions {
-                    Button(role: .destructive) {
-                        print("Hi")
-                    } label: {
-                        Label("Send message", systemImage: "minus.circle")
+        VStack {
+            Button("Request Permission") {
+                UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { success, error in
+                    if success {
+                        print("All set!")
+                    } else if let error = error {
+                        print(error.localizedDescription)
                     }
                 }
-                .swipeActions(edge: .leading) {
-                    Button {
-                        print("Hi")
-                    } label: {
-                        Label("Pin", systemImage: "pin")
-                    }
-                    .tint(.orange)
-                }
+            }
+            
+            Button("Schedule Notification") {
+                // define the content
+                let content = UNMutableNotificationContent()
+                content.title = "Feed the cat"
+                content.subtitle = "It looks hungry"
+                content.sound = UNNotificationSound.default
+                
+                // define the trigger
+                // i.e. show this notification 5 secs from now
+                let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 5, repeats: false)
+                
+                // combine the two (choose a random id)
+                let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
+                
+                // add our notification request
+                UNUserNotificationCenter.current().add(request)
+            }
         }
     }
 }
