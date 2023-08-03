@@ -5,10 +5,12 @@
 //  Created by Keenan Chiasson on 8/3/23.
 //
 
+import CodeScanner
 import SwiftUI
 
 struct ProspectsView: View {
     @EnvironmentObject var prospects: Prospects
+    @State private var isShowingScanner = false
     
     let filter: FilterType
     
@@ -48,14 +50,36 @@ struct ProspectsView: View {
             .navigationTitle(title)
             .toolbar {
                 Button {
-                    let prospect = Prospect()
-                    prospect.name = "Keenan Chiasson"
-                    prospect.emailAddress = "keenan.chiasson@acstexas.com"
-                    prospects.people.append(prospect)
+//                    let prospect = Prospect()
+//                    prospect.name = "Keenan Chiasson"
+//                    prospect.emailAddress = "keenan.chiasson@acstexas.com"
+//                    prospects.people.append(prospect)
+                    isShowingScanner = true
                 } label: {
                     Label("Scan", systemImage: "qrcode.viewfinder")
                 }
             }
+            .sheet(isPresented: $isShowingScanner) {
+                CodeScannerView(codeTypes: [.qr], simulatedData: "Paul Champion\npaul.champion@acstexas.com", completion: handleScan)
+            }
+        }
+    }
+    
+    func handleScan(result: Result<ScanResult, ScanError>) {
+        isShowingScanner = false
+        
+        switch result {
+        case .success(let result):
+            let details = result.string.components(separatedBy: "\n")
+            guard details.count == 2 else { return }
+            
+            let person = Prospect()
+            person.name = details[0]
+            person.emailAddress = details[1]
+            
+            prospects.people.append(person)
+        case .failure(let error):
+            print("Scanning failed: \(error.localizedDescription)")
         }
     }
 }
